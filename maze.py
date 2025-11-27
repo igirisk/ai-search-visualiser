@@ -1,3 +1,7 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
+
 class Node:
     """
     Represents node in a search tree.
@@ -75,6 +79,8 @@ class StackFrontier:
 
 class Maze:
     def __init__(self, file_path: str):
+        self.name = file_path.split("/")[-1]
+
         with open(file_path, "r", encoding="utf-8") as file:
             contents = file.read()
 
@@ -178,18 +184,38 @@ class Maze:
                 ):
                     frontier.add(Node(state, current_node, action))
 
+    def print_maze(self):
+        """
+        Visualize maze using matplotlib.
+
+        Legend:
+        white (path)
+        black (wall)
+        S (start point)
+        E (end point)
+        """
+
+        # Visualize the maze using matplot
+        plt.figure()
+        plt.imshow(
+            self.walls, cmap="binary", interpolation="nearest", origin="upper"
+        )  # 'binary' colormap for black/white
+
+        # Hide x-axis anc y-axis ticks
+        plt.xticks([])
+        plt.yticks([])
+
+        # Set maze title
+        plt.title(self.name)
+
+        # Mark out start and end
+        textstyle = {"fontsize": 16, "ha": "center", "va": "center", "color": "red"}
+        plt.text(self.start[1], self.start[0], "S", **textstyle)
+        plt.text(self.end[1], self.end[0], "E", **textstyle)
+
+        plt.show()
+
 
 print("======= Maze 1 solution =======")
 maze1 = Maze("mazes/maze1.txt")
-maze1.solve()
-print(maze1.solution)
-
-print("======= Maze 2 solution =======")
-maze2 = Maze("mazes/maze2.txt")
-maze2.solve()
-print(maze2.solution)
-
-print("======= Maze 3 solution =======")
-maze3 = Maze("mazes/maze3.txt")
-maze3.solve()
-print(maze3.solution)
+maze1.print_maze()
