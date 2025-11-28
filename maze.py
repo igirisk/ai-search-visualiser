@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 import numpy as np
+from matplotlib.colors import ListedColormap, BoundaryNorm
 
 
 class Node:
@@ -113,7 +115,7 @@ class Maze:
             self.walls.append(walls)
 
         # Track visited node
-        self.explored_set = set()
+        self.explored_list = []
 
         # Action and node of path
         self.solution = None
@@ -174,19 +176,19 @@ class Maze:
                 return
 
             # Add node to explored
-            self.explored_set.add(current_node.state)
+            self.explored_list.append(current_node.state)
 
             # Expand node, add resulting node to frontier
             for action, state in self.neighbours(current_node.state):
                 # Exclude nodes explored and already in frontier
-                if state not in self.explored_set and not frontier.contains_state(
+                if state not in self.explored_list and not frontier.contains_state(
                     state
                 ):
                     frontier.add(Node(state, current_node, action))
 
-    def print_maze(self):
+    def draw(self):
         """
-        Visualize maze using matplotlib.
+        Draw maze using matplotlib.
 
         Legend:
         white (path)
@@ -195,27 +197,92 @@ class Maze:
         E (end point)
         """
 
-        # Visualize the maze using matplot
-        plt.figure()
-        plt.imshow(
+        fig, ax = plt.subplots()
+
+        drawing = ax.imshow(
             self.walls, cmap="binary", interpolation="nearest", origin="upper"
         )  # 'binary' colormap for black/white
 
         # Hide x-axis anc y-axis ticks
-        plt.xticks([])
-        plt.yticks([])
+        ax.set_xticks([])
+        ax.set_yticks([])
 
         # Set maze title
-        plt.title(self.name)
+        ax.set_title(self.name)
 
         # Mark out start and end
-        textstyle = {"fontsize": 16, "ha": "center", "va": "center", "color": "red"}
-        plt.text(self.start[1], self.start[0], "S", **textstyle)
-        plt.text(self.end[1], self.end[0], "E", **textstyle)
+        textstyle = {"fontsize": 16, "ha": "center", "va": "center", "color": "blue"}
+        ax.text(self.start[1], self.start[0], "S", **textstyle)
+        ax.text(self.end[1], self.end[0], "E", **textstyle)
+
+        plt.show()
+
+    def animate(self):
+        cmap = ListedColormap(
+            ["white", "black", "yellow", "lightgreen"]
+        )  # 0=path, 1=wall, 2=visited, 3=solution
+        bounds = [0, 1, 2, 3, 4]  # integer bins
+        norm = BoundaryNorm(bounds, cmap.N)
+
+        fig, ax = plt.subplots()
+
+        # Convert boolean to int
+        maze_int = np.array(self.walls, dtype=int)
+
+        # Now use the colormap
+        im = ax.imshow(
+            maze_int, cmap=cmap, norm=norm, interpolation="nearest", origin="upper"
+        )
+
+        # Hide x-axis anc y-axis ticks
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+        # Set maze title
+        ax.set_title(self.name)
+
+        # Mark out start and end
+        textstyle = {"fontsize": 16, "ha": "center", "va": "center", "color": "blue"}
+        start_text = ax.text(self.start[1], self.start[0], "S", **textstyle)
+        end_text = ax.text(self.end[1], self.end[0], "E", **textstyle)
+
+        visited_cells = self.explored_list
+        if self.solution:
+            solution_cells = [node.state for node in self.solution[1]]
+            solution_cells.append(self.end)
+        else:
+            solution_cells = None
+
+        def finding_solution(frame_index):
+            if frame_index < len(visited_cells):
+                # Mark cells as visited in yellow
+                x, y = visited_cells[frame_index]
+                maze_int[x, y] = 2  # 2 = visited
+            elif solution_cells is not None:
+                for x, y in solution_cells:
+                    maze_int[x, y] = 3  # 3 = solution
+            else:
+                ax.text(
+                    1,
+                    self.height,
+                    "No solution",
+                    fontsize=20,
+                    ha="center",
+                    va="center",
+                    color="red",
+                )
+            im.set_data(maze_int)  # Update the image
+            return [im, start_text, end_text]
+
+        total_frames = len(visited_cells) + 1
+
+        ani = FuncAnimation(
+            fig, finding_solution, frames=total_frames, interval=400, repeat=False
+        )
 
         plt.show()
 
 
-print("======= Maze 1 solution =======")
-maze1 = Maze("mazes/maze1.txt")
-maze1.print_maze()
+maze1 = Maze("mazes/maze4.txt")
+maze1.solve()
+maze1.animate()
