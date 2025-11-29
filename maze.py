@@ -1,7 +1,8 @@
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
 import numpy as np
-from matplotlib.colors import ListedColormap, BoundaryNorm
+from matplotlib.animation import FuncAnimation
+from matplotlib.colors import BoundaryNorm, ListedColormap
+import sys
 
 
 class Node:
@@ -301,6 +302,21 @@ class Maze:
         plt.show()
 
 
-maze1 = Maze("mazes/maze2.txt")
-maze1.solve("bfs")
+# Check valid script useage
+if len(sys.argv) != 3:
+    print("Usage: maze.py <path_to_maze> <search_type>")
+    sys.exit(1)
+
+_, maze_path, search_type = sys.argv
+
+valid_search_type = {"bfs", "dfs", "astar"}
+
+# Check valid search type provided
+if search_type not in valid_search_type:
+    print(f"Invalid search type: {search_type}")
+    print(f"Please provide valid search type: {valid_search_type}")
+    sys.exit(1)
+
+maze1 = Maze(maze_path)
+maze1.solve(search_type)
 maze1.animate()
