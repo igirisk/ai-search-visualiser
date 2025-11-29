@@ -79,6 +79,24 @@ class StackFrontier:
         return False
 
 
+class QueueFrontier(StackFrontier):
+    """
+    Queue implementation using a Python list.
+    Supports first in first out operations.
+    """
+
+    def remove(self):
+        """
+        Pop the first node added to the queue.
+
+        Returns:
+            Node: The first added node.
+        """
+        if self.is_empty():
+            raise IndexError("Empty frontier")
+        return self._frontier.pop(0)
+
+
 class Maze:
     def __init__(self, file_path: str):
         self.name = file_path.split("/")[-1]
@@ -143,14 +161,14 @@ class Maze:
                 result.append((action, (r, c)))
         return result
 
-    def solve(self):
+    def solve(self, search_type):
         """
         Finds solution to the maze.
         """
 
         # Initialize frontier to starting position
         start = Node(self.start, None, None)
-        frontier = StackFrontier()
+        frontier = StackFrontier() if search_type == "dfs" else QueueFrontier()
         frontier.add(start)
 
         while True:
@@ -283,6 +301,6 @@ class Maze:
         plt.show()
 
 
-maze1 = Maze("mazes/maze4.txt")
-maze1.solve()
+maze1 = Maze("mazes/maze2.txt")
+maze1.solve("bfs")
 maze1.animate()
