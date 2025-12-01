@@ -13,18 +13,28 @@ class Node:
         state (tuple[int, int]): Current position represented as (row, column).
         parent (Node | None): The preceding node in the search path. Set to None for the root node.
         action (str | None): The action taken from the parent to reach this node ("up", "down", "left", "right"). None for the root node.
+        cost (int): The cost from initial state to node.
+        man_dist (int): Manhattan distance from current position to end point.
     """
 
-    def __init__(self, state: tuple[int, int], parent: tuple[int, int], action: str):
+    def __init__(
+        self,
+        state: tuple[int, int],
+        parent: tuple[int, int],
+        action: str,
+        cost: int,
+        man_dist: int,
+    ):
         self.state = state
         self.parent = parent
         self.action = action
+        self.cost = cost
+        self.man_dist = man_dist
 
 
 class StackFrontier:
     """
-    Stack implementation using a Python list.
-    Supports last in first out operations.
+    Frontier implementing last in first out operations.
     """
 
     def __init__(self):
@@ -82,8 +92,7 @@ class StackFrontier:
 
 class QueueFrontier(StackFrontier):
     """
-    Queue implementation using a Python list.
-    Supports first in first out operations.
+    Frontier implementing first in first out opertations.
     """
 
     def remove(self):
@@ -95,6 +104,24 @@ class QueueFrontier(StackFrontier):
         """
         if self.is_empty():
             raise IndexError("Empty frontier")
+        return self._frontier.pop(0)
+
+
+class GreedyFrontier(QueueFrontier):
+    """
+    Frontier prioritising nodes with the lowest Manhattan-distance heuristic to the goal.
+    """
+
+    def remove(self):
+        """
+        Pop the first node added to the queue.
+
+        Returns:
+            Node: The first added node.
+        """
+        if self.is_empty():
+            raise IndexError("Empty frontier")
+        self._frontier.sort(key=lambda n: n.man_dist)
         return self._frontier.pop(0)
 
 
@@ -139,6 +166,16 @@ class Maze:
         # Action and node of path
         self.solution = None
 
+    def get_manhattan_distance(self, current, target):
+        """
+        Calculates the manhattan distance from current state to target state.
+
+        Args:
+            current (tuple[int, int]): Current position represented as (row, column).
+            target (tuple[int, int]): target position represented as (row, column).
+        """
+        return abs(current[0] - target[0]) + abs(current[1] - target[1])
+
     def neighbours(self, state):
         """
         Provides all valid moves from the given position in the maze.
@@ -167,9 +204,19 @@ class Maze:
         Finds solution to the maze.
         """
 
-        # Initialize frontier to starting position
-        start = Node(self.start, None, None)
-        frontier = StackFrontier() if search_type == "dfs" else QueueFrontier()
+        # Initialize frontier to start position
+        start = Node(
+            self.start, None, None, 0, self.get_manhattan_distance(self.start, self.end)
+        )
+
+        # Set frontier based on search type
+        if search_type == "dfs":
+            frontier = StackFrontier()
+        elif search_type == "bfs":
+            frontier = QueueFrontier()
+        else:
+            frontier = GreedyFrontier()
+
         frontier.add(start)
 
         while True:
@@ -203,7 +250,15 @@ class Maze:
                 if state not in self.explored_list and not frontier.contains_state(
                     state
                 ):
-                    frontier.add(Node(state, current_node, action))
+                    frontier.add(
+                        Node(
+                            state,
+                            current_node,
+                            action,
+                            current_node.cost + 1,
+                            self.get_manhattan_distance(state, self.end),
+                        )
+                    )
 
     def draw(self):
         """
@@ -309,7 +364,7 @@ if len(sys.argv) != 3:
 
 _, maze_path, search_type = sys.argv
 
-valid_search_type = {"bfs", "dfs", "astar"}
+valid_search_type = {"bfs", "dfs", "gfs"}
 
 # Check valid search type provided
 if search_type not in valid_search_type:
