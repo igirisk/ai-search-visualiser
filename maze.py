@@ -184,7 +184,7 @@ class Maze:
         # Action and node of path
         self.solution = None
 
-    def get_manhattan_distance(self, current, target):
+    def get_manhattan_distance(self, current: tuple[int, int], target: tuple[int, int]):
         """
         Calculates the manhattan distance from current state to target state.
 
@@ -194,7 +194,7 @@ class Maze:
         """
         return abs(current[0] - target[0]) + abs(current[1] - target[1])
 
-    def neighbours(self, state):
+    def neighbours(self, state: tuple[int, int]):
         """
         Provides all valid moves from the given position in the maze.
 
@@ -217,7 +217,7 @@ class Maze:
                 result.append((action, (r, c)))
         return result
 
-    def solve(self, search_type):
+    def solve(self, search_type: str):
         """
         Finds solution to the maze.
         """
@@ -280,38 +280,29 @@ class Maze:
                         )
                     )
 
-    def draw(self):
+    def draw(self, maze: list[list[int]]):
         """
         Draw maze using matplotlib.
 
         Legend:
         white (path)
         black (wall)
+        yellow (visitied)
+        green (solution)
         S (start point)
         E (end point)
+
+        Args:
+            maze (list[list[int]]): Nested list representation of the maze
+
+        Return:
+            fig : .Figure from matplot.
+            ax : ~matplotlib.axes.Axes from matplot.
+            im : ~matplotlib.image.AxesImage from matplot.
+            start_text: .Text instance from matplot marking start point.
+            end_text: .Text instance from matplot marking end point.
         """
 
-        fig, ax = plt.subplots()
-
-        drawing = ax.imshow(
-            self.walls, cmap="binary", interpolation="nearest", origin="upper"
-        )  # 'binary' colormap for black/white
-
-        # Hide x-axis anc y-axis ticks
-        ax.set_xticks([])
-        ax.set_yticks([])
-
-        # Set maze title
-        ax.set_title(self.name)
-
-        # Mark out start and end
-        textstyle = {"fontsize": 16, "ha": "center", "va": "center", "color": "blue"}
-        ax.text(self.start[1], self.start[0], "S", **textstyle)
-        ax.text(self.end[1], self.end[0], "E", **textstyle)
-
-        plt.show()
-
-    def animate(self):
         cmap = ListedColormap(
             ["white", "black", "yellow", "lightgreen"]
         )  # 0=path, 1=wall, 2=visited, 3=solution
@@ -320,12 +311,9 @@ class Maze:
 
         fig, ax = plt.subplots()
 
-        # Convert boolean to int
-        maze_int = np.array(self.walls, dtype=int)
-
         # Now use the colormap
         im = ax.imshow(
-            maze_int, cmap=cmap, norm=norm, interpolation="nearest", origin="upper"
+            maze, cmap=cmap, norm=norm, interpolation="nearest", origin="upper"
         )
 
         # Hide x-axis anc y-axis ticks
@@ -339,6 +327,14 @@ class Maze:
         textstyle = {"fontsize": 16, "ha": "center", "va": "center", "color": "blue"}
         start_text = ax.text(self.start[1], self.start[0], "S", **textstyle)
         end_text = ax.text(self.end[1], self.end[0], "E", **textstyle)
+
+        return (fig, ax, im, start_text, end_text)
+
+    def animate(self):
+        # Convert boolean to int
+        maze_int = np.array(self.walls, dtype=int)
+
+        fig, ax, im, start_text, end_text = self.draw(maze_int)
 
         visited_cells = self.explored_list
         if self.solution:
