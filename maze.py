@@ -109,19 +109,37 @@ class QueueFrontier(StackFrontier):
 
 class GreedyFrontier(QueueFrontier):
     """
-    Frontier prioritising nodes with the lowest Manhattan-distance heuristic to the goal.
+    Frontier prioritising nodes with the lowest manhattan distance heuristic to the goal.
     """
 
     def remove(self):
         """
-        Pop the first node added to the queue.
+        Pop node with lowest manhattan distance heuristic to goal.
 
         Returns:
-            Node: The first added node.
+            Node: The node with the lowest manhattan distance to gool.
         """
         if self.is_empty():
             raise IndexError("Empty frontier")
         self._frontier.sort(key=lambda n: n.man_dist)
+        return self._frontier.pop(0)
+
+
+class AstarFrontier(QueueFrontier):
+    """
+    Frontier prioritising nodes with lowest sum of manhatten distance to goal and cost to reach node.
+    """
+
+    def remove(self):
+        """
+        Pop node with lowest sum of manhatten distance to goal and cost to reach node.
+
+        Returns:
+            Node: The node with lowest sum of manhatten distance to goal and cost to reach node.
+        """
+        if self.is_empty():
+            raise IndexError("Empty frontier")
+        self._frontier.sort(key=lambda n: n.man_dist + n.cost)
         return self._frontier.pop(0)
 
 
@@ -214,8 +232,10 @@ class Maze:
             frontier = StackFrontier()
         elif search_type == "bfs":
             frontier = QueueFrontier()
-        else:
+        elif search_type == "gfs":
             frontier = GreedyFrontier()
+        else:
+            frontier = AstarFrontier()
 
         frontier.add(start)
 
@@ -364,7 +384,7 @@ if len(sys.argv) != 3:
 
 _, maze_path, search_type = sys.argv
 
-valid_search_type = {"bfs", "dfs", "gfs"}
+valid_search_type = {"bfs", "dfs", "gfs", "astar"}
 
 # Check valid search type provided
 if search_type not in valid_search_type:
