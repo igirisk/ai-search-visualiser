@@ -197,6 +197,7 @@ class Maze:
         # Tracks cost to reach cell from start point
         self.cost = {}
 
+        # Save matplotlib .Text instance
         self.text_dict = {}
 
     def get_manhattan_distance(self, current: tuple[int, int], target: tuple[int, int]):
@@ -315,11 +316,11 @@ class Maze:
             maze (list[list[int]]): Nested list representation of the maze
 
         Return:
-            fig : .Figure from matplot.
-            ax : ~matplotlib.axes.Axes from matplot.
-            im : ~matplotlib.image.AxesImage from matplot.
-            start_text: .Text instance from matplot marking start point.
-            end_text: .Text instance from matplot marking end point.
+            fig : .Figure from matplotlib.
+            ax : ~matplotlib.axes.Axes from matplotlib.
+            im : ~matplotlib.image.AxesImage from matplotlib.
+            start_text: .Text instance from matplotlib marking start point.
+            end_text: .Text instance from matplotlib marking end point.
         """
 
         cmap = ListedColormap(
@@ -414,6 +415,9 @@ class Maze:
         ani = FuncAnimation(
             fig, finding_solution, frames=total_frames, interval=400, repeat=False
         )
+
+        # Save animation as gif. Before use comment out 'plt.show' below
+        # ani.save(filename="animation/pillow_example.gif", writer="pillow")
 
         plt.show()
 
