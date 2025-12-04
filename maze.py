@@ -1,8 +1,9 @@
+import sys
+
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.animation import FuncAnimation
 from matplotlib.colors import BoundaryNorm, ListedColormap
-import sys
 
 
 class Node:
@@ -144,8 +145,9 @@ class AstarFrontier(QueueFrontier):
 
 
 class Maze:
-    def __init__(self, file_path: str):
+    def __init__(self, file_path: str, search_type: str):
         self.name = file_path.split("/")[-1]
+        self.search_type = search_type
 
         with open(file_path, "r", encoding="utf-8") as file:
             contents = file.read()
@@ -184,6 +186,11 @@ class Maze:
         # Action and node of path
         self.solution = None
 
+        # Tracks cost to reach cell from start point
+        self.cost = {}
+
+        self.text_dict = {}
+
     def get_manhattan_distance(self, current: tuple[int, int], target: tuple[int, int]):
         """
         Calculates the manhattan distance from current state to target state.
@@ -217,7 +224,7 @@ class Maze:
                 result.append((action, (r, c)))
         return result
 
-    def solve(self, search_type: str):
+    def solve(self):
         """
         Finds solution to the maze.
         """
@@ -226,6 +233,8 @@ class Maze:
         start = Node(
             self.start, None, None, 0, self.get_manhattan_distance(self.start, self.end)
         )
+
+        search_type = self.search_type
 
         # Set frontier based on search type
         if search_type == "dfs":
@@ -270,15 +279,17 @@ class Maze:
                 if state not in self.explored_list and not frontier.contains_state(
                     state
                 ):
+                    child_cost = current_node.cost + 1
                     frontier.add(
                         Node(
                             state,
                             current_node,
                             action,
-                            current_node.cost + 1,
+                            child_cost,
                             self.get_manhattan_distance(state, self.end),
                         )
                     )
+                    self.cost[state] = child_cost
 
     def draw(self, maze: list[list[int]]):
         """
@@ -328,6 +339,21 @@ class Maze:
         start_text = ax.text(self.start[1], self.start[0], "S", **textstyle)
         end_text = ax.text(self.end[1], self.end[0], "E", **textstyle)
 
+        #  Mark cells greedy first and a star search
+        if self.search_type in ("gfs", "astar"):
+            for r, row in enumerate(self.walls):
+                for c, cell_value in enumerate(row):
+                    cell = (r, c)
+
+                    # Mark path cells based on manhattan distance to endpoint
+                    if cell_value is False and cell not in (self.start, self.end):
+                        cell_text = ax.text(
+                            c,
+                            r,
+                            str(self.get_manhattan_distance(cell, self.end)),
+                            **textstyle,
+                        )
+                        self.text_dict[cell] = cell_text
         return (fig, ax, im, start_text, end_text)
 
     def animate(self):
@@ -346,8 +372,19 @@ class Maze:
         def finding_solution(frame_index):
             if frame_index < len(visited_cells):
                 # Mark cells as visited in yellow
-                x, y = visited_cells[frame_index]
-                maze_int[x, y] = 2  # 2 = visited
+                cell = visited_cells[frame_index]
+                maze_int[cell] = 2  # 2 = visited
+
+                # astar search type mark visited cells with manhattan + cost
+                if self.search_type == "astar" and cell not in (self.start, self.end):
+                    t_obj = self.text_dict[cell]
+
+                    # Set smaller font
+                    t_obj.set_fontsize(10)
+
+                    current_text = t_obj.get_text()
+                    t_obj.set_text(f"{current_text}+{self.cost[cell]}")
+
             elif solution_cells is not None:
                 for x, y in solution_cells:
                     maze_int[x, y] = 3  # 3 = solution
@@ -378,16 +415,16 @@ if len(sys.argv) != 3:
     print("Usage: maze.py <path_to_maze> <search_type>")
     sys.exit(1)
 
-_, maze_path, search_type = sys.argv
+_, maze_path, search = sys.argv
 
 valid_search_type = {"bfs", "dfs", "gfs", "astar"}
 
 # Check valid search type provided
-if search_type not in valid_search_type:
-    print(f"Invalid search type: {search_type}")
+if search not in valid_search_type:
+    print(f"Invalid search type: {search}")
     print(f"Please provide valid search type: {valid_search_type}")
     sys.exit(1)
 
-maze1 = Maze(maze_path)
-maze1.solve(search_type)
+maze1 = Maze(maze_path, search)
+maze1.solve()
 maze1.animate()
