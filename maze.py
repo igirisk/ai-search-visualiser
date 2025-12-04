@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import sys
 
 import matplotlib.pyplot as plt
@@ -21,8 +23,8 @@ class Node:
     def __init__(
         self,
         state: tuple[int, int],
-        parent: tuple[int, int],
-        action: str,
+        parent: Node | None,
+        action: str | None,
         cost: int,
         man_dist: int,
     ):
@@ -44,7 +46,7 @@ class StackFrontier:
     def __repr__(self):
         return f"Stack({self._frontier})"
 
-    def add(self, node):
+    def add(self, node: Node):
         """
         Push a node onto the stack.
 
@@ -118,7 +120,7 @@ class GreedyFrontier(QueueFrontier):
         Pop node with lowest manhattan distance heuristic to goal.
 
         Returns:
-            Node: The node with the lowest manhattan distance to gool.
+            Node: The node with the lowest manhattan distance to goal.
         """
         if self.is_empty():
             raise IndexError("Empty frontier")
@@ -128,15 +130,15 @@ class GreedyFrontier(QueueFrontier):
 
 class AstarFrontier(QueueFrontier):
     """
-    Frontier prioritising nodes with lowest sum of manhatten distance to goal and cost to reach node.
+    Frontier prioritising nodes with lowest sum of manhattan distance to goal and cost to reach node.
     """
 
     def remove(self):
         """
-        Pop node with lowest sum of manhatten distance to goal and cost to reach node.
+        Pop node with lowest sum of manhattan distance to goal and cost to reach node.
 
         Returns:
-            Node: The node with lowest sum of manhatten distance to goal and cost to reach node.
+            Node: The node with lowest sum of manhattan distance to goal and cost to reach node.
         """
         if self.is_empty():
             raise IndexError("Empty frontier")
@@ -152,20 +154,25 @@ class Maze:
         with open(file_path, "r", encoding="utf-8") as file:
             contents = file.read()
 
+        lines = contents.splitlines()
+
         # Check valid maze
         if contents.count("S") != 1:
             raise Exception("Maze should have exactly one starting point.")
         if contents.count("E") != 1:
             raise Exception("Maze should have exactly one ending point.")
 
+        # Check all rows same length
+        if len(set(len(line) for line in lines)) != 1:
+            raise Exception("Maze rows are not all the same length.")
+
         # Get height and width of maze
-        contents = contents.splitlines()
-        self.height = len(contents)
-        self.width = max(len(line) for line in contents)
+        self.height = len(lines)
+        self.width = max(len(line) for line in lines)
 
         # Create nested list represetation of walls in maze
         self.walls = []
-        for i, row in enumerate(contents):
+        for i, row in enumerate(lines):
             walls = []
             for j, cell in enumerate(row):
                 if cell == "S":
@@ -178,6 +185,7 @@ class Maze:
                     walls.append(False)
                 else:
                     walls.append(True)
+
             self.walls.append(walls)
 
         # Track visited node
