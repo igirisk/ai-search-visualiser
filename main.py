@@ -148,7 +148,7 @@ class AstarFrontier(QueueFrontier):
 
 class Maze:
     def __init__(self, file_path: str, search_type: str):
-        self.name = file_path.split("/")[-1]
+        self.name = f'{file_path.split("/")[-1]}_ {search_type}'
         self.search_type = search_type
 
         with open(file_path, "r", encoding="utf-8") as file:
@@ -250,7 +250,7 @@ class Maze:
             frontier = StackFrontier()
         elif search_type == "bfs":
             frontier = QueueFrontier()
-        elif search_type == "gfs":
+        elif search_type == "gbfs":
             frontier = GreedyFrontier()
         else:
             frontier = AstarFrontier()
@@ -305,12 +305,12 @@ class Maze:
         Draw maze using matplotlib.
 
         Legend:
-        white (path)
-        black (wall)
-        yellow (visitied)
-        green (solution)
-        S (start point)
-        E (end point)
+        - White: path
+        - Black: wall
+        - Yellow: visited cells
+        - Green: solution path
+        - S: start point
+        - E: end point
 
         Args:
             maze (list[list[int]]): Nested list representation of the maze
@@ -348,8 +348,8 @@ class Maze:
         start_text = ax.text(self.start[1], self.start[0], "S", **textstyle)
         end_text = ax.text(self.end[1], self.end[0], "E", **textstyle)
 
-        #  Mark cells greedy first and a star search
-        if self.search_type in ("gfs", "astar"):
+        #  Mark cells greedy best first and a star search
+        if self.search_type in ("gbfs", "astar"):
             for r, row in enumerate(self.walls):
                 for c, cell_value in enumerate(row):
                     cell = (r, c)
@@ -366,6 +366,22 @@ class Maze:
         return (fig, ax, im, start_text, end_text)
 
     def animate(self):
+        """
+        Creates an animation visualisation of the maze using Matplotlib.
+
+        Legend:
+        - White: path
+        - Black: wall
+        - Yellow: visited cells
+        - Green: solution path
+        - S: start point
+        - E: end point
+
+        Algorithm-specific notes:
+        - GBFS: marks cells with Manhattan distance to goal
+        - A*: marks cells with Manhattan distance to goal plus cost to reach the cell
+        """
+
         # Convert boolean to int
         maze_int = np.array(self.walls, dtype=int)
 
@@ -417,19 +433,19 @@ class Maze:
         )
 
         # Save animation as gif. Before use comment out 'plt.show' below
-        # ani.save(filename="animation/pillow_example.gif", writer="pillow")
+        # ani.save(filename="example.gif", writer="pillow")
 
         plt.show()
 
 
 # Check valid script useage
 if len(sys.argv) != 3:
-    print("Usage: maze.py <path_to_maze> <search_type>")
+    print("Usage: main.py <path_to_maze> <search_type>")
     sys.exit(1)
 
 _, maze_path, search = sys.argv
 
-valid_search_type = {"bfs", "dfs", "gfs", "astar"}
+valid_search_type = {"bfs", "dfs", "gbfs", "astar"}
 
 # Check valid search type provided
 if search not in valid_search_type:
