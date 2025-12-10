@@ -170,32 +170,29 @@ class Maze:
         self.height = len(lines)
         self.width = max(len(line) for line in lines)
 
-        # Create nested list represetation of walls in maze
-        self.walls = []
+        # Create nested list represetation of path in maze
+        self.paths = []
         for i, row in enumerate(lines):
-            walls = []
+            paths = []
             for j, cell in enumerate(row):
                 if cell == "S":
                     self.start = (i, j)
-                    walls.append(False)
+                    paths.append(1)
                 elif cell == "E":
                     self.end = (i, j)
-                    walls.append(False)
+                    paths.append(1)
                 elif cell == " ":
-                    walls.append(False)
+                    paths.append(1)
                 else:
-                    walls.append(True)
+                    paths.append(0)
 
-            self.walls.append(walls)
+            self.paths.append(paths)
 
         # Track visited node
-        self.explored_list = []
+        self.explored_nodes = []
 
         # Action and node of path
         self.solution = None
-
-        # Tracks cost to reach cell from start point
-        self.cost = {}
 
         # Save matplotlib .Text instance
         self.text_dict = {}
@@ -229,7 +226,7 @@ class Maze:
         ]
         result = []
         for action, (r, c) in candidates:
-            if 0 <= r < self.height and 0 <= c < self.width and not self.walls[r][c]:
+            if 0 <= r < self.height and 0 <= c < self.width and self.paths[r][c]:
                 result.append((action, (r, c)))
         return result
 
@@ -280,14 +277,13 @@ class Maze:
                 return
 
             # Add node to explored
-            self.explored_list.append(current_node.state)
+            self.explored_nodes.append(current_node)
 
             # Expand node, add resulting node to frontier
             for action, state in self.neighbours(current_node.state):
+                explored_cells = [node.state for node in self.explored_nodes]
                 # Exclude nodes explored and already in frontier
-                if state not in self.explored_list and not frontier.contains_state(
-                    state
-                ):
+                if state not in explored_cells and not frontier.contains_state(state):
                     child_cost = current_node.cost + 1
                     frontier.add(
                         Node(
@@ -298,7 +294,6 @@ class Maze:
                             self.get_manhattan_distance(state, self.end),
                         )
                     )
-                    self.cost[state] = child_cost
 
     def draw(self, maze: list[list[int]]):
         """
@@ -324,9 +319,9 @@ class Maze:
         """
 
         cmap = ListedColormap(
-            ["white", "black", "yellow", "lightgreen"]
-        )  # 0=path, 1=wall, 2=visited, 3=solution
-        bounds = [0, 1, 2, 3, 4]  # integer bins
+            ["lightgreen", "yellow", "black", "white"]
+        )  # -2=solution, -1=visited, 0=wall, 1=path
+        bounds = [-2, -1, 0, 1, 2]  # integer bins
         norm = BoundaryNorm(bounds, cmap.N)
 
         fig, ax = plt.subplots()
@@ -350,12 +345,12 @@ class Maze:
 
         #  Mark cells greedy best first and a star search
         if self.search_type in ("gbfs", "astar"):
-            for r, row in enumerate(self.walls):
+            for r, row in enumerate(self.paths):
                 for c, cell_value in enumerate(row):
                     cell = (r, c)
 
                     # Mark path cells based on manhattan distance to endpoint
-                    if cell_value is False and cell not in (self.start, self.end):
+                    if cell_value == 1 and cell not in (self.start, self.end):
                         cell_text = ax.text(
                             c,
                             r,
@@ -383,11 +378,11 @@ class Maze:
         """
 
         # Convert boolean to int
-        maze_int = np.array(self.walls, dtype=int)
+        maze_int = np.array(self.paths)
 
         fig, ax, im, start_text, end_text = self.draw(maze_int)
 
-        visited_cells = self.explored_list
+        visited_nodes = self.explored_nodes
         if self.solution:
             solution_cells = [node.state for node in self.solution[1]]
             solution_cells.append(self.end)
@@ -395,10 +390,11 @@ class Maze:
             solution_cells = None
 
         def finding_solution(frame_index):
-            if frame_index < len(visited_cells):
+            if frame_index < len(visited_nodes):
                 # Mark cells as visited in yellow
-                cell = visited_cells[frame_index]
-                maze_int[cell] = 2  # 2 = visited
+                node = visited_nodes[frame_index]
+                cell = node.state
+                maze_int[cell] = -1  # -1 = visited
 
                 # astar search type mark visited cells with manhattan + cost
                 if self.search_type == "astar" and cell not in (self.start, self.end):
@@ -408,11 +404,11 @@ class Maze:
                     t_obj.set_fontsize(10)
 
                     current_text = t_obj.get_text()
-                    t_obj.set_text(f"{current_text}+{self.cost[cell]}")
+                    t_obj.set_text(f"{current_text}+{node.cost}")
 
             elif solution_cells is not None:
                 for x, y in solution_cells:
-                    maze_int[x, y] = 3  # 3 = solution
+                    maze_int[x, y] = -2  # -2 = solution
             else:
                 ax.text(
                     1,
@@ -426,7 +422,7 @@ class Maze:
             im.set_data(maze_int)  # Update the image
             return [im, start_text, end_text]
 
-        total_frames = len(visited_cells) + 1
+        total_frames = len(visited_nodes) + 1
 
         ani = FuncAnimation(
             fig, finding_solution, frames=total_frames, interval=400, repeat=False
