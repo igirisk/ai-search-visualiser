@@ -16,7 +16,7 @@ class Node:
         state (tuple[int, int]): Current position represented as (row, column).
         parent (Node | None): The preceding node in the search path. Set to None for the root node.
         action (str | None): The action taken from the parent to reach this node ("up", "down", "left", "right"). None for the root node.
-        cost (int): The cost from initial state to node.
+        cost (int): The total cost from initial state to node.
         man_dist (int): Manhattan distance from current position to end point.
     """
 
@@ -176,15 +176,17 @@ class Maze:
             paths = []
             for j, cell in enumerate(row):
                 if cell == "S":
-                    self.start = (i, j)
+                    self.start = (i, j)  # start
                     paths.append(1)
                 elif cell == "E":
-                    self.end = (i, j)
+                    self.end = (i, j)  # end
                     paths.append(1)
+                elif cell == "#":
+                    paths.append(0)  # wall
                 elif cell == " ":
-                    paths.append(1)
+                    paths.append(1)  # path
                 else:
-                    paths.append(0)
+                    paths.append(int(cell))  # weighted path
 
             self.paths.append(paths)
 
@@ -284,7 +286,8 @@ class Maze:
                 explored_cells = [node.state for node in self.explored_nodes]
                 # Exclude nodes explored and already in frontier
                 if state not in explored_cells and not frontier.contains_state(state):
-                    child_cost = current_node.cost + 1
+                    r, c = state
+                    child_cost = current_node.cost + self.paths[r][c]
                     frontier.add(
                         Node(
                             state,
@@ -302,6 +305,9 @@ class Maze:
         Legend:
         - White: path
         - Black: wall
+        - Orange: 3 cost path
+        - Red: 6 cost path
+        - Dark Red: 9 cost path
         - Yellow: visited cells
         - Green: solution path
         - S: start point
@@ -319,9 +325,17 @@ class Maze:
         """
 
         cmap = ListedColormap(
-            ["lightgreen", "yellow", "black", "white"]
-        )  # -2=solution, -1=visited, 0=wall, 1=path
-        bounds = [-2, -1, 0, 1, 2]  # integer bins
+            [
+                "lightgreen",  # -2 solution
+                "yellow",  #  -1 visited
+                "black",  # 0 wall
+                "white",  # 1 cost path
+                "orange",  # 3 cost path
+                "red",  # 6 cost path
+                "darkred",  # 9 cost path
+            ]
+        )
+        bounds = [-2, -1, 0, 1, 3, 6, 9, 10]  # integer bins
         norm = BoundaryNorm(bounds, cmap.N)
 
         fig, ax = plt.subplots()
@@ -350,7 +364,7 @@ class Maze:
                     cell = (r, c)
 
                     # Mark path cells based on manhattan distance to endpoint
-                    if cell_value == 1 and cell not in (self.start, self.end):
+                    if cell_value != 0 and cell not in (self.start, self.end):
                         cell_text = ax.text(
                             c,
                             r,
@@ -367,6 +381,9 @@ class Maze:
         Legend:
         - White: path
         - Black: wall
+        - Orange: 3 cost path
+        - Red: 6 cost path
+        - Dark Red: 9 cost path
         - Yellow: visited cells
         - Green: solution path
         - S: start point
