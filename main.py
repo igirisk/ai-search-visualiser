@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import heapq
+import itertools
 import sys
 
 import matplotlib.pyplot as plt
@@ -115,6 +117,19 @@ class GreedyFrontier(QueueFrontier):
     Frontier prioritising nodes with the lowest manhattan distance heuristic to the goal.
     """
 
+    def __init__(self):
+        super().__init__()
+        self._tiebreaker = itertools.count()
+
+    def add(self, node: Node):
+        """
+        Push node in to queue with lowest manhattan distance to has priority.
+
+        Args:
+            node (Node): The node to be added.
+        """
+        heapq.heappush(self._frontier, (node.man_dist, next(self._tiebreaker), node))
+
     def remove(self):
         """
         Pop node with lowest manhattan distance heuristic to goal.
@@ -124,14 +139,45 @@ class GreedyFrontier(QueueFrontier):
         """
         if self.is_empty():
             raise IndexError("Empty frontier")
-        self._frontier.sort(key=lambda n: n.man_dist)
-        return self._frontier.pop(0)
+        return heapq.heappop(self._frontier)[2]
+
+    def contains_state(self, state):
+        """
+        Check if frontier contains node with desired state.
+
+        Args:
+            state (tuple[int, int]): Current position represented as (row, column).
+
+        Returns:
+            bool: True is node with desired state is in frontier, false otherwise.
+        """
+
+        for node in self._frontier:
+            if node[2].state == state:
+                return True
+
+        return False
 
 
 class AstarFrontier(QueueFrontier):
     """
     Frontier prioritising nodes with lowest sum of manhattan distance to goal and cost to reach node.
     """
+
+    def __init__(self):
+        super().__init__()
+        self._tiebreaker = itertools.count()
+
+    def add(self, node: Node):
+        """
+        Push node in to queue with lowest sum of manhattan distance total cost from initial state to node has priority.
+
+        Args:
+            node (Node): The node to be added.
+        """
+        heapq.heappush(
+            self._frontier, (node.man_dist + node.cost, next(self._tiebreaker), node)
+        )
 
     def remove(self):
         """
@@ -142,8 +188,24 @@ class AstarFrontier(QueueFrontier):
         """
         if self.is_empty():
             raise IndexError("Empty frontier")
-        self._frontier.sort(key=lambda n: n.man_dist + n.cost)
-        return self._frontier.pop(0)
+        return heapq.heappop(self._frontier)[2]
+
+    def contains_state(self, state):
+        """
+        Check if frontier contains node with desired state.
+
+        Args:
+            state (tuple[int, int]): Current position represented as (row, column).
+
+        Returns:
+            bool: True is node with desired state is in frontier, false otherwise.
+        """
+
+        for node in self._frontier:
+            if node[2].state == state:
+                return True
+
+        return False
 
 
 class Maze:
