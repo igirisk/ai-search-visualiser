@@ -161,7 +161,7 @@ class GreedyFrontier(QueueFrontier):
 
 class AstarFrontier(QueueFrontier):
     """
-    Frontier prioritising nodes with lowest sum of manhattan distance to goal and cost to reach node.
+    Frontier prioritising nodes with lowest sum of manhattan distance to goal and total cost to reach node.
     """
 
     def __init__(self):

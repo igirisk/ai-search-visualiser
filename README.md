@@ -29,12 +29,17 @@ This project implements breadth-first search (BFS), depth-first search (DFS), gr
 
 ### Legend:
 
-- White: path
+- White: 1 cost path
+- Orange: 3 cost path
+- Red: 6 cost path
+- Dark Red: 9 cost path
 - Black: wall
 - Yellow: visited cells
 - Green: solution path
 - S: start point
 - E: end point
+- Tile label: manhattan distance to endpoint
+- Explored label: manhattan distance to endpoint + total cost to reach node
 
 ### Maze 1
 
