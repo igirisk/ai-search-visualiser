@@ -8,9 +8,15 @@
     - [Breadth-first search(BFS)](#breadth-first-searchbfs)
     - [Depth-first search(DFS)](#depth-first-searchdfs)
     - [Greedy best-first search(GBFS)](#greedy-best-first-searchgbfs)
+    - [Comparison table](#comparison-table)
   - [Maze 4](#maze-4)
     - [Greedy best-first search(GBFS)](#greedy-best-first-searchgbfs-1)
     - [A\* search(A\*)](#a-searcha)
+    - [Comparison table](#comparison-table-1)
+  - [Weighted Maze](#weighted-maze)
+    - [Greedy best-first search(GBFS)](#greedy-best-first-searchgbfs-2)
+    - [A\* search(A\*)](#a-searcha-1)
+    - [Comparison table](#comparison-table-2)
 - [Setup and Usage](#setup-and-usage)
   - [Maze file format](#maze-file-format)
 - [Acknowledgements](#acknowledgements)
@@ -55,6 +61,14 @@ This project implements breadth-first search (BFS), depth-first search (DFS), gr
 
 ![maze1_gbfs](demo/maze1_gbfs.gif)
 
+#### Comparison table
+
+| Algorithm | Time (s) | Explored Nodes | Solution Cost |
+| :-------- | :------- | :------------- | :------------ |
+| bfs       | 0.000204 | 35             | 18            |
+| dfs       | 0.000125 | 27             | 18            |
+| gbfs      | 0.000107 | 21             | 18            |
+
 ### Maze 4
 
 #### Greedy best-first search(GBFS)
@@ -64,6 +78,30 @@ This project implements breadth-first search (BFS), depth-first search (DFS), gr
 #### A\* search(A\*)
 
 ![maze4_astar](demo/maze4_astar.gif)
+
+#### Comparison table
+
+| Algorithm | Time (s) | Explored Nodes | Solution Cost |
+| :-------- | :------- | :------------- | :------------ |
+| gbfs      | 0.000206 | 34             | 33            |
+| astar     | 0.000135 | 30             | 21            |
+
+### Weighted Maze
+
+#### Greedy best-first search(GBFS)
+
+![weightedmaze_gbfs](demo/weightedmaze_gbfs.gif)
+
+#### A\* search(A\*)
+
+![weightedmaze_gbfs](demo/weightedmaze_astar.gif)
+
+#### Comparison table
+
+| Algorithm | Time (s) | Explored Nodes | Solution Cost |
+| :-------- | :------- | :------------- | :------------ |
+| gbfs      | 0.000057 | 7              | 23            |
+| astar     | 0.000112 | 21             | 19            |
 
 ## Setup and Usage
 
