@@ -3,6 +3,7 @@ from __future__ import annotations
 import heapq
 import itertools
 import sys
+import time
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -299,6 +300,11 @@ class Maze:
         Finds solution to the maze.
         """
 
+        # Get solve start time
+        start_time = time.perf_counter()
+
+        solution_cost = 0
+
         # Initialize frontier to start position
         start = Node(
             self.start, None, None, 0, self.get_manhattan_distance(self.start, self.end)
@@ -322,7 +328,7 @@ class Maze:
             # Check if there is no solution
             if frontier.is_empty():
                 self.solution = None
-                return
+                break
 
             current_node = frontier.remove()
 
@@ -330,6 +336,8 @@ class Maze:
             if current_node.state == self.end:
                 actions = []
                 cells = []
+                # Get solution cost
+                solution_cost = current_node.cost
                 # Creates actions and cells list from root to child
                 while current_node.parent is not None:
                     actions.append(current_node.action)
@@ -338,7 +346,7 @@ class Maze:
                 actions.reverse()
                 cells.reverse()
                 self.solution = (actions, cells)
-                return
+                break
 
             # Add node to explored
             self.explored_nodes.append(current_node)
@@ -359,6 +367,26 @@ class Maze:
                             self.get_manhattan_distance(state, self.end),
                         )
                     )
+
+        # Get solve end time
+        end_time = time.perf_counter()
+
+        # Calulate solving time
+        time_taken = end_time - start_time
+
+        # Print summary table
+        rows = [
+            ("Algorithm", "Time (s)", "Explored Nodes", "Solution Cost"),
+            (
+                search_type,
+                f"{time_taken:.6f}",
+                len(explored_cells),
+                solution_cost,
+            ),
+        ]
+
+        for row in rows:
+            print(f"{row[0]:<12} | {row[1]:<12} | {row[2]:<16} | {row[3]:<16}")
 
     def draw(self, maze: list[list[int]]):
         """
